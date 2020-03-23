@@ -126,40 +126,13 @@ class Interfacepackagingtrigger
     public function run_trigger($action, $object, $user, $langs, $conf) {
         // Put here code you want to execute when a Dolibarr business events occurs.
         // Data and type of action are stored into $object and $action
-        if($action == 'LINEORDER_SUPPLIER_CREATE') {
+        if($action == 'LINEORDER_SUPPLIER_CREATE' || $action == 'LINEORDER_SUPPLIER_UPDATE') {
+            dol_include_once('/packaging/class/packaging.class.php');
 
-            $commande = new CommandeFournisseur($this->db);
-            $commande->fetch($object->fk_commande);
-            $conditionnement = $this->get_product_fourn_conditionnement($object);
+            $conditionnement = TPackaging::getProductFournConditionnement($object);
+
             if(! empty($conditionnement)) {
                 $new_qty = ceil($object->qty / $conditionnement);
-                $commande->updateline(
-                    $object->id,
-                    $object->desc,
-                    $object->subprice,
-                    $new_qty,
-                    $object->remise_percent,
-                    $object->tva_tx,
-                    $object->localtax1_tx,
-                    $object->localtax2_tx,
-                    'HT',
-                    $object->info_bits,
-                    0,
-                    true,
-                    $object->date_start,
-                    $object->date_end,
-                    $object->array_options,
-                    $object->fk_unit,
-                    $object->multicurrency_subprice,
-                    $object->ref_supplier
-                );
-            }
-        }
-        else if($action == 'LINEORDER_SUPPLIER_UPDATE') {
-            $conditionnement = $this->get_product_fourn_conditionnement($object);
-
-            if(! empty($conditionnement)) {
-                $new_qty = ceil($_REQUEST['qty'] / $conditionnement);
 
                 $commande = new CommandeFournisseur($this->db);
                 $commande->fetch($object->fk_commande);
@@ -190,6 +163,8 @@ class Interfacepackagingtrigger
 
         // Supplier orders
         else if($action == 'STOCK_MOVEMENT') {
+            dol_include_once('/packaging/class/packaging.class.php');
+
             // Sélection de la ligne concernée
             $line = null;
 
@@ -204,7 +179,7 @@ class Interfacepackagingtrigger
             if(! empty($line)) {
 
                 $line->fk_commande = $object->origin->id;
-                $conditionnement = $this->get_product_fourn_conditionnement($line);
+                $conditionnement = TPackaging::getProductFournConditionnement($line);
                 if(! empty($conditionnement)) {
                     $new_qty = round($object->qty * $conditionnement, 2);
 
@@ -234,23 +209,6 @@ class Interfacepackagingtrigger
             }
         }
 
-        return 0;
-    }
-
-    function get_product_fourn_conditionnement($line) {
-
-        $sql = "SELECT pfpe.packaging FROM ".MAIN_DB_PREFIX."product_fournisseur_price_extrafields as pfpe WHERE fk_object=( 
-                    SELECT pfp.rowid FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp 
-                    WHERE pfp.fk_product = ".$line->fk_product." AND pfp.ref_fourn = '".$line->ref_supplier."' AND pfp.fk_soc = (
-                        SELECT cf.fk_soc FROM  ".MAIN_DB_PREFIX."commande_fournisseur as cf WHERE cf.rowid = ".$line->fk_commande."
-                    ) AND pfp.price = ".$line->subprice."
-        );";
-        $resql = $this->db->query($sql);
-
-        if(!empty($resql) && $this->db->num_rows($resql) > 0){
-            $obj = $this->db->fetch_object($resql);
-            return $obj->packaging;
-        }
         return 0;
     }
 }

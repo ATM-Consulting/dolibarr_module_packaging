@@ -65,30 +65,57 @@ class Actionspackaging
 	 * @param   HookManager     $hookmanager    Hook manager propagated to allow calling another hook
 	 * @return  int                             < 0 on error, 0 on success, 1 to replace standard code
 	 */
-	public function doActions($parameters, &$object, &$action, $hookmanager)
+	public function printObjectLine($parameters, &$object, &$action, $hookmanager)
 	{
-		$error = 0; // Error counter
-		$myvalue = 'test'; // A result value
 
-		print_r($parameters);
-		echo "action: " . $action;
-		print_r($object);
 
-		if (in_array('somecontext', explode(':', $parameters['context'])))
-		{
-		  // do something only for the context 'somecontext'
-		}
+		if (in_array('ordersuppliercard', explode(':', $parameters['context']))) {
+            dol_include_once('/packaging/class/packaging.class.php');
+            $object->lines[$parameters['i']]->fk_commande = $object->id;
+            $conditionnement = TPackaging::getProductFournConditionnement($object->lines[$parameters['i']]);
+            if(! empty($conditionnement)) {
+                ?>
+                <script type="text/javascript">
+                    $(document).ready(function () {
+                        let conditionnement = <?php echo $conditionnement;?>;
+                        let qty = $('#row-<?php echo $object->lines[$parameters['i']]->id;?>').find('.linecolqty').html();
+                        qty = qty.replace(/\s/g, '');
+                        let total = parseFloat(conditionnement)*parseFloat(qty);
+                        $('#row-<?php echo $object->lines[$parameters['i']]->id;?>').find('.linecolqty').append(' (x'+conditionnement+' = '+total+')');
+                    });
+                </script>
+                <?php
+            }
+        }
 
-		if (! $error)
-		{
-			$this->results = array('myreturn' => $myvalue);
-			$this->resprints = 'A text to show';
-			return 0; // or return 1 to replace standard code
-		}
-		else
-		{
-			$this->errors[] = 'Error message';
-			return -1;
-		}
+
 	}
+
+	public function printFieldListValue($parameters, &$object, &$action, $hookmanager) {
+        if (in_array('ordersupplierdispatch', explode(':', $parameters['context']))) {
+            dol_include_once('/packaging/class/packaging.class.php');
+           if($parameters['is_information_row']) {
+               $myLine = '';
+
+               foreach($object->lines as $line) {
+                   if($line->id == $parameters['objp']->rowid) {
+                       $myLine = $line;
+                       $myLine->fk_commande = $object->id;
+                       break;
+                   }
+               }
+               $conditionnement = TPackaging::getProductFournConditionnement($myLine);
+               if(! empty($conditionnement)) {
+                   ?>
+                   <script type="text/javascript">
+                       $(document).ready(function () {
+                           let conditionnement = <?php echo $conditionnement;?>;
+                            $('input[name^="fk_commandefourndet"][value="<?php echo$parameters['objp']->rowid;?>"]').closest('tr').find('input[name^="qty_"]').after(' (x'+conditionnement+')');
+                       });
+                   </script>
+                   <?php
+               }
+           }
+        }
+    }
 }
