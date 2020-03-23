@@ -56,3 +56,4 @@ ConfirmValidatepackagingBody=Souhaitez-vous vraiment activer cette fiche packagi
 
 ConfirmDeletepackagingTitle=Confirmation de suppression
 ConfirmDeletepackagingBody=Souhaitez-vous vraiment supprimer cette fiche packaging %s ?
+Packaging = Conditionnement

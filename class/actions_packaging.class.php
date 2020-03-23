@@ -118,4 +118,21 @@ class Actionspackaging
            }
         }
     }
+    public function beforePDFCreation($parameters, &$object, &$action, $hookmanager) {
+
+        if (in_array('ordersuppliercard', explode(':', $parameters['context']))) {
+            global $langs;
+            dol_include_once('/packaging/class/packaging.class.php');
+
+            $langs->load('packaging@packaging');
+            foreach($object->lines as &$line) {
+                $line->fk_commande = $object->id;
+                $conditionnement = TPackaging::getProductFournConditionnement($line);
+                if(!empty($conditionnement)) {
+                    $line->desc .= "<br>".$langs->trans('Packaging') . ' : '. $conditionnement;
+                    $line->description .= "<br>".$langs->trans('Packaging') . ' : '. $conditionnement;
+                }
+            }
+        }
+    }
 }
