@@ -126,7 +126,7 @@ class Interfacepackagingtrigger
     public function run_trigger($action, $object, $user, $langs, $conf) {
         // Put here code you want to execute when a Dolibarr business events occurs.
         // Data and type of action are stored into $object and $action
-        if($action == 'LINEORDER_SUPPLIER_CREATE' || $action == 'LINEORDER_SUPPLIER_UPDATE') {
+        if($action == 'LINEORDER_SUPPLIER_CREATE') {
             dol_include_once('/packaging/class/packaging.class.php');
 
             $conditionnement = TPackaging::getProductFournConditionnement($object);

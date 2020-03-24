@@ -81,7 +81,7 @@ class Actionspackaging
                         let qty = $('#row-<?php echo $object->lines[$parameters['i']]->id;?>').find('.linecolqty').html();
                         qty = qty.replace(/\s/g, '');
                         let total = parseFloat(conditionnement)*parseFloat(qty);
-                        $('#row-<?php echo $object->lines[$parameters['i']]->id;?>').find('.linecolqty').append(' (x'+conditionnement+' = '+total+')');
+                        $('#row-<?php echo $object->lines[$parameters['i']]->id;?>').find('.linecolqty').append(' (x '+conditionnement+' = '+total+')');
                     });
                 </script>
                 <?php
@@ -110,7 +110,7 @@ class Actionspackaging
                    <script type="text/javascript">
                        $(document).ready(function () {
                            let conditionnement = <?php echo $conditionnement;?>;
-                            $('input[name^="fk_commandefourndet"][value="<?php echo$parameters['objp']->rowid;?>"]').closest('tr').find('input[name^="qty_"]').after(' (x'+conditionnement+')');
+                            $('input[name^="fk_commandefourndet"][value="<?php echo$parameters['objp']->rowid;?>"]').closest('tr').find('input[name^="qty_"]').after(' (x '+conditionnement+')');
                        });
                    </script>
                    <?php

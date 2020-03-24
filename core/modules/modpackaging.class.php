@@ -341,7 +341,7 @@ class modpackaging extends DolibarrModules
         $result = $this->_load_tables('/packaging/sql/');
         dol_include_once('/core/class/extrafields.class.php');
         $extrafields = new ExtraFields($this->db);
-        $res = $extrafields->addExtraField('packaging', 'Conditionnement', 'varchar', 0, 255, 'product_fournisseur_price',  0,  0,  '',  '',  0,  '', '1', '',  '',  '',  '',  '1', 0);
+        $res = $extrafields->addExtraField('packaging', 'Conditionnement', 'double', 0, '24,8', 'product_fournisseur_price',  0,  0,  '',  '',  0,  '', '1', '',  '',  '',  '',  '1', 0);
 //		setEventMessage('packagingNewRightsDefinedCheckUserRights', 'warnings');
 
         return $this->_init($sql, $options);
