@@ -48,6 +48,72 @@ class TPackaging extends SeedObject
         }
         return 0;
     }
+
+    public static function loadQtySupplierOrder($fk_prod = 0, $filtrestatut = '') {
+        global $db;
+
+        $sql = "SELECT DISTINCT cd.rowid";
+        $sql .= " FROM ".MAIN_DB_PREFIX."commande_fournisseurdet as cd";
+        $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."commande_fournisseur as c ON (c.rowid = cd.fk_commande)";
+        $sql .= " WHERE cd.fk_product = ".$fk_prod;
+        $sql .= " AND c.entity IN (".getEntity('supplier_order').")";
+        if ($filtrestatut != '') {
+            $sql .= " AND c.fk_statut in (".$filtrestatut.")"; // Peut valoir 0
+        }
+
+        $result = $db->query($sql);
+        if ($result) {
+            $qty = 0;
+            while($obj = $db->fetch_object($result)) {
+                $line = new CommandeFournisseurLigne($db);
+                $line->fetch($obj->rowid);
+                $conditionnement = TPackaging::getProductFournConditionnement($line);
+                if(!empty($conditionnement)) $qty += $line->qty * $conditionnement;
+                else $qty += $line->qty;
+
+            }
+            return $qty;
+        }
+        else
+        {
+            setEventMessage($db->error().' sql='.$sql, 'warnings');
+            return -1;
+        }
+
+    }
+
+    public static function loadQtyReception($fk_prod = 0, $filtrestatut = '') {
+        global $db;
+
+        $sql = "SELECT DISTINCT fd.fk_commandefourndet";
+        $sql .= " FROM ".MAIN_DB_PREFIX."commande_fournisseur_dispatch as fd";
+        $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."commande_fournisseur as c ON (c.rowid = fd.fk_commande)";
+        $sql .= " WHERE fd.fk_product = ".$fk_prod;
+        $sql .= " AND c.entity IN (".getEntity('supplier_order').")";
+        if ($filtrestatut != '') {
+            $sql .= " AND c.fk_statut in (".$filtrestatut.")"; // Peut valoir 0
+        }
+
+        $result = $db->query($sql);
+        if ($result) {
+            $qty = 0;
+            while($obj = $db->fetch_object($result)) {
+                $line = new CommandeFournisseurLigne($db);
+                $line->fetch($obj->fk_commandefourndet);
+                $conditionnement = TPackaging::getProductFournConditionnement($line);
+                if(!empty($conditionnement)) $qty += ($line->qty * $conditionnement);
+                else $qty += $line->qty;
+
+            }
+            return $qty;
+        }
+        else
+        {
+            setEventMessage($db->error().' sql='.$sql, 'warnings');
+            return -1;
+        }
+
+    }
 }
 
 

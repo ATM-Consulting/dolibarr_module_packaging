@@ -135,4 +135,65 @@ class Actionspackaging
             }
         }
     }
+    public function loadvirtualstock($parameters, &$object, &$action, $hookmanager) {
+	    //On écrase le stock virtuel
+        if (in_array('productdao', explode(':', $parameters['context']))) {
+            global $conf;
+            dol_include_once('/packaging/class/packaging.class.php');
+            dol_include_once('/fourn/class/fournisseur.commande.class.php');
+            $stock_commande_fournisseur = 0;
+            $stock_reception_fournisseur = 0;
+
+            if (!empty($conf->fournisseur->enabled))
+            {
+                $result = $object->load_stats_commande_fournisseur(0, '1,2,3,4', 1);
+                if ($result < 0) dol_print_error($object->db, $object->error);
+                $stock_commande_fournisseur = $object->stats_commande_fournisseur['qty'];
+            }
+            if (!empty($conf->fournisseur->enabled) && empty($conf->reception->enabled))
+            {
+                $result = $object->load_stats_reception(0, '4', 1);
+                if ($result < 0) dol_print_error($object->db, $object->error);
+                $stock_reception_fournisseur = $object->stats_reception['qty'];
+            }
+            if (!empty($conf->fournisseur->enabled) && !empty($conf->reception->enabled))
+            {
+                $result = $object->load_stats_reception(0, '4', 1);			// Use same tables than when module reception is not used.
+                if ($result < 0) dol_print_error($object->db, $object->error);
+                $stock_reception_fournisseur = $object->stats_reception['qty'];
+            }
+            //On annule les mouvements de stocks qui ont été fait sur la partie "commandes fournisseurs"
+            $object->stock_theorique -= $this->_calcStockTheo($stock_commande_fournisseur, $stock_reception_fournisseur);
+
+            //On récupère les bonnes stats avec les multiplications du conditionnement
+            $stock_commande_fournisseur = TPackaging::loadQtySupplierOrder($object->id, '1,2,3,4');
+            $stock_reception_fournisseur = TPackaging::loadQtyReception($object->id, '4');
+
+            $object->stock_theorique += $this->_calcStockTheo($stock_commande_fournisseur, $stock_reception_fournisseur);
+        }
+    }
+
+
+
+
+
+    public function _calcStockTheo($stock_commande_fournisseur, $stock_reception_fournisseur) {
+	    global $conf;
+
+        if (!empty($conf->global->STOCK_CALCULATE_ON_RECEPTION) || !empty($conf->global->STOCK_CALCULATE_ON_RECEPTION_CLOSE)) {
+           return ($stock_commande_fournisseur - $stock_reception_fournisseur);
+        }
+        elseif (!empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER)) {
+            return ($stock_commande_fournisseur - $stock_reception_fournisseur);
+        }
+        elseif (!empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_VALIDATE_ORDER)) {
+            return $stock_reception_fournisseur;
+        }
+        elseif (!empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_BILL)) {
+            return ($stock_commande_fournisseur - $stock_reception_fournisseur);
+        }
+        return 0;
+    }
 }
+
+
