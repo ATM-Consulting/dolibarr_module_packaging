@@ -91,6 +91,25 @@ class Actionspackaging
 
 	}
 
+	public function formEditProductOptions($parameters, &$object, &$action, $hookmanager)
+	{
+        if (in_array('ordersuppliercard', explode(':', $parameters['context']))) {
+            dol_include_once('/packaging/class/packaging.class.php');
+            $parameters['line']->fk_commande = $object->id;
+            $conditionnement = TPackaging::getProductFournConditionnement($parameters['line']);
+            if(! empty($conditionnement)) {
+                ?>
+                <script type="text/javascript">
+                    $(document).ready(function () {
+                        let conditionnement = <?php echo $conditionnement;?>;
+                        $('#qty').after(' (x '+conditionnement+')');
+                    });
+                </script>
+                <?php
+            }
+        }
+	}
+
 	public function printFieldListValue($parameters, &$object, &$action, $hookmanager) {
         if (in_array('ordersupplierdispatch', explode(':', $parameters['context']))) {
             dol_include_once('/packaging/class/packaging.class.php');

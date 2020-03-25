@@ -129,6 +129,8 @@ class Interfacepackagingtrigger
         if($action == 'LINEORDER_SUPPLIER_CREATE') {
             dol_include_once('/packaging/class/packaging.class.php');
 
+            if(!empty($object->context['createfromclone'])) return 0; //dans le cas d'un clone on ne doit pas recalculer la quantité
+
             $conditionnement = TPackaging::getProductFournConditionnement($object);
 
             if(! empty($conditionnement)) {
@@ -164,7 +166,6 @@ class Interfacepackagingtrigger
         // Supplier orders
         else if($action == 'STOCK_MOVEMENT') {
             dol_include_once('/packaging/class/packaging.class.php');
-
             // Sélection de la ligne concernée
             $line = null;
 
@@ -187,14 +188,12 @@ class Interfacepackagingtrigger
                     $sql = '
 						UPDATE '.MAIN_DB_PREFIX.'stock_mouvement
 						SET value = '.$new_qty.'
-						WHERE fk_origin = '.$object->origin->id.'
-						AND origintype = "order_supplier"
-						AND fk_product =  '.$object->product_id.'
+						WHERE rowid = '.$object->id.' 
 						ORDER BY tms DESC
 						LIMIT 1;
 					';
 
-                    $statement = $this->db->query($sql);
+                    $statement = $object->db->query($sql);
 
                     // On supprime la précédente quantité insérée et on ajoute la nouvelle quantité calculée
                     $sql = "
@@ -204,7 +203,7 @@ class Interfacepackagingtrigger
 						AND fk_product = ".$object->product_id."
 					";
 
-                    $statement = $this->db->query($sql);
+                    $statement = $object->db->query($sql);
                 }
             }
         }

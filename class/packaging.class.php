@@ -38,7 +38,7 @@ class TPackaging extends SeedObject
                     SELECT pfp.rowid FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp 
                     WHERE pfp.fk_product = ".$line->fk_product." AND pfp.ref_fourn = '".$line->ref_supplier."' AND pfp.fk_soc = (
                         SELECT cf.fk_soc FROM  ".MAIN_DB_PREFIX."commande_fournisseur as cf WHERE cf.rowid = ".$line->fk_commande."
-                    ) AND pfp.price = ".$line->subprice."
+                    )
         );";
         $resql = $db->query($sql);
 
