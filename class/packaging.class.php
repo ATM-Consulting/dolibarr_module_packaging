@@ -85,7 +85,7 @@ class TPackaging extends SeedObject
     public static function loadQtyReception($fk_prod = 0, $filtrestatut = '') {
         global $db;
 
-        $sql = "SELECT DISTINCT fd.fk_commandefourndet";
+        $sql = "SELECT DISTINCT fd.fk_commandefourndet, fd.qty";
         $sql .= " FROM ".MAIN_DB_PREFIX."commande_fournisseur_dispatch as fd";
         $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."commande_fournisseur as c ON (c.rowid = fd.fk_commande)";
         $sql .= " WHERE fd.fk_product = ".$fk_prod;
@@ -101,8 +101,8 @@ class TPackaging extends SeedObject
                 $line = new CommandeFournisseurLigne($db);
                 $line->fetch($obj->fk_commandefourndet);
                 $conditionnement = TPackaging::getProductFournConditionnement($line);
-                if(!empty($conditionnement)) $qty += ($line->qty * $conditionnement);
-                else $qty += $line->qty;
+                if(!empty($conditionnement)) $qty += ($obj->qty * $conditionnement);
+                else $qty += $obj->qty;
 
             }
             return $qty;

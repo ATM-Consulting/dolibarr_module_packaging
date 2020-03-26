@@ -70,18 +70,19 @@ class Actionspackaging
 
 
 		if (in_array('ordersuppliercard', explode(':', $parameters['context']))) {
+		    global $langs;
+		    $langs->load('packaging@packaging');
             dol_include_once('/packaging/class/packaging.class.php');
+            dol_include_once('/form/class/html.form.class.php');
+            $form = new Form($object->db);
             $object->lines[$parameters['i']]->fk_commande = $object->id;
             $conditionnement = TPackaging::getProductFournConditionnement($object->lines[$parameters['i']]);
             if(! empty($conditionnement)) {
                 ?>
                 <script type="text/javascript">
                     $(document).ready(function () {
-                        let conditionnement = <?php echo $conditionnement;?>;
-                        let qty = $('#row-<?php echo $object->lines[$parameters['i']]->id;?>').find('.linecolqty').html();
-                        qty = qty.replace(/\s/g, '');
-                        let total = parseFloat(conditionnement)*parseFloat(qty);
-                        $('#row-<?php echo $object->lines[$parameters['i']]->id;?>').find('.linecolqty').append(' (x '+conditionnement+' = '+total+')');
+                        let tooltip = '<?php echo $form->textwithtooltip(' ', $langs->trans('PackagingSupplierOrderTooltip',round($conditionnement,2),round($conditionnement,2).' x '.$object->lines[$parameters['i']]->qty.' = '.($conditionnement*$object->lines[$parameters['i']]->qty) ),2, 1, img_help(1,0)); ?>';
+                        $('#row-<?php echo $object->lines[$parameters['i']]->id;?>').find('.linecolqty').append(tooltip);
                     });
                 </script>
                 <?php
@@ -103,6 +104,7 @@ class Actionspackaging
                     $(document).ready(function () {
                         let conditionnement = <?php echo $conditionnement;?>;
                         $('#qty').after(' (x '+conditionnement+')');
+                        $('#qty').closest('td').attr('nowrap','nowrap');
                     });
                 </script>
                 <?php
@@ -112,7 +114,12 @@ class Actionspackaging
 
 	public function printFieldListValue($parameters, &$object, &$action, $hookmanager) {
         if (in_array('ordersupplierdispatch', explode(':', $parameters['context']))) {
+            global $langs;
+            $langs->load('packaging@packaging');
+
             dol_include_once('/packaging/class/packaging.class.php');
+            dol_include_once('/form/class/html.form.class.php');
+            $form = new Form($object->db);
            if($parameters['is_information_row']) {
                $myLine = '';
 
@@ -128,8 +135,8 @@ class Actionspackaging
                    ?>
                    <script type="text/javascript">
                        $(document).ready(function () {
-                           let conditionnement = <?php echo $conditionnement;?>;
-                            $('input[name^="fk_commandefourndet"][value="<?php echo$parameters['objp']->rowid;?>"]').closest('tr').find('input[name^="qty_"]').after(' (x '+conditionnement+')');
+                           let tooltip = '<?php echo $form->textwithtooltip(' ', $langs->trans('PackagingSupplierOrderTooltip',round($conditionnement,2), $langs->trans('PackagingValueWillBeMultiplicated') ),2, 1, img_help(1,0)); ?>';
+                            $('input[name^="fk_commandefourndet"][value="<?php echo$parameters['objp']->rowid;?>"]').closest('tr').find('input[name^="qty_"]').after(tooltip);
                        });
                    </script>
                    <?php
@@ -148,8 +155,12 @@ class Actionspackaging
                 $line->fk_commande = $object->id;
                 $conditionnement = TPackaging::getProductFournConditionnement($line);
                 if(!empty($conditionnement)) {
-                    $line->desc .= "<br>".$langs->trans('Packaging') . ' : '. $conditionnement;
-                    $line->description .= "<br>".$langs->trans('Packaging') . ' : '. $conditionnement;
+                    if(!empty($line->desc)) $line->desc .= "<br>".$langs->trans('Packaging') . ' : '. round($conditionnement,2);
+                    else if(!empty($line->description))$line->description .= "<br>".$langs->trans('Packaging') . ' : '. round($conditionnement,2);
+                    else {
+                        $line->desc = $langs->trans('Packaging') . ' : '. round($conditionnement,2);
+                        $line->description = $langs->trans('Packaging') . ' : '. round($conditionnement, 2);
+                    }
                 }
             }
         }
