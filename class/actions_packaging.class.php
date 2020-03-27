@@ -203,6 +203,85 @@ class Actionspackaging
         }
     }
 
+    public function addMoreActionsButtons($parameters, &$object, &$action, $hookmanager) {
+        if (in_array('stockproductcard', explode(':', $parameters['context']))) {
+            global $langs, $conf, $db;
+            dol_include_once('/packaging/class/packaging.class.php');
+            dol_include_once('/form/class/html.form.class.php');
+            $form = new Form($object->db);
+
+            $found = 0;
+            //TODO à partir de la 12 utilisez les hooks loadstats
+            //Pour que ce soit compatible en 11 obliger de recréer la tooltip
+            $helpondiff = '<strong>'.$langs->trans("StockDiffPhysicTeoric").':</strong><br>';
+            // Number of customer orders running
+            if(! empty($conf->commande->enabled)) {
+                if($found) $helpondiff .= '<br>';
+                else $found = 1;
+                $result = $object->load_stats_commande(0, '1,2', 1);
+                $helpondiff .= $langs->trans("ProductQtyInCustomersOrdersRunning").': '.$object->stats_commande['qty'];
+                $result = $object->load_stats_commande(0, '0', 1);
+                if($result < 0) dol_print_error($db, $object->error);
+                $helpondiff .= ' ('.$langs->trans("ProductQtyInDraft").': '.$object->stats_commande['qty'].')';
+            }
+
+            // Number of product from customer order already sent (partial shipping)
+            if(! empty($conf->expedition->enabled)) {
+                require_once DOL_DOCUMENT_ROOT.'/expedition/class/expedition.class.php';
+                $filterShipmentStatus = '';
+                if(! empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT)) {
+                    $filterShipmentStatus = Expedition::STATUS_VALIDATED.','.Expedition::STATUS_CLOSED;
+                }
+                else if(! empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT_CLOSE)) {
+                    $filterShipmentStatus = Expedition::STATUS_CLOSED;
+                }
+                if($found) $helpondiff .= '<br>';
+                else $found = 1;
+                $result = $object->load_stats_sending(0, '2', 1, $filterShipmentStatus);
+                $helpondiff .= $langs->trans("ProductQtyInShipmentAlreadySent").': '.$object->stats_expedition['qty'];
+            }
+
+            // Number of supplier order running
+            if(! empty($conf->fournisseur->enabled)) {
+                if($found) $helpondiff .= '<br>';
+                else $found = 1;
+                $result = TPackaging::loadQtySupplierOrder($object->id, '3,4');
+                $helpondiff .= $langs->trans("ProductQtyInSuppliersOrdersRunning").': '.$result;
+                $result = TPackaging::loadQtySupplierOrder($object->id, '0,1,2');
+                if($result < 0) dol_print_error($db, $object->error);
+                $helpondiff .= ' ('.$langs->trans("ProductQtyInDraftOrWaitingApproved").': '.$result.')';
+            }
+
+            // Number of product from supplier order already received (partial receipt)
+            if(! empty($conf->fournisseur->enabled)) {
+                if($found) $helpondiff .= '<br>';
+                else $found = 1;
+                $result = TPackaging::loadQtyReception($object->id, '4');
+                $helpondiff .= $langs->trans("ProductQtyInSuppliersShipmentAlreadyRecevied").': '.$result;
+            }
+
+            // Number of product in production
+            if(! empty($conf->mrp->enabled)) {
+                if($found) $helpondiff .= '<br>';
+                else $found = 1;
+                $helpondiff .= $langs->trans("ProductQtyToConsumeByMO").': '.$object->stats_mrptoconsume['qty'].'<br>';
+                $helpondiff .= $langs->trans("ProductQtyToProduceByMO").': '.$object->stats_mrptoproduce['qty'];
+            }
+
+            ?>
+            <script type="text/javascript">
+                $(document).ready(function(){
+                   let tdVirtual = $('td:contains("<?php echo $langs->trans('VirtualStock'); ?>")').next();
+                   let tooltip = '<?php echo addslashes($form->textwithtooltip('', $helpondiff,2, 1, img_help(1,0))); ?>';
+                   tdVirtual.find('.classfortooltip').remove();
+                   tdVirtual.append(tooltip);
+                });
+            </script>
+            <?php
+
+        }
+    }
+
 
 
 
