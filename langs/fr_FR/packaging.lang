@@ -59,3 +59,4 @@ ConfirmDeletepackagingBody=Souhaitez-vous vraiment supprimer cette fiche packagi
 Packaging = Conditionnement
 PackagingSupplierOrderTooltip = Conditionnement : %s <br> %s
 PackagingValueWillBeMultiplicated = La valeur saisie sera multipliée par le conditionnement
+PackagingExtraTooltip = Lors de l'ajout de lignes sur les commandes fournisseurs, les quantités seront divisés par le conditionnement. <br>Lors de la réception d'une commande, les quantités seront multipliés par le conditionnement. <br> <i>(Exemple : Pour un produit X nous un avons un conditionnement de 10. Lors de l'ajout dans la commande fournisseur, si nous saisissons 50 en quantité pour ce produit, la quantité affichera 5. <br> Lors de la réception, nous pourrons réceptionner 5 "produit X" et au moment de celle-ci, entrera en stock 50 produit X)</i>
