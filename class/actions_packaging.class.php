@@ -143,7 +143,68 @@ class Actionspackaging
                }
            }
         }
+        if (in_array('stockreplenishlist', explode(':', $parameters['context'])) && !empty($parameters['objp']->rowid)) {
+            global $conf, $db;
+            dol_include_once('/packaging/class/packaging.class.php');
+            $mode = GETPOST('mode', 'alpha');
+            $draftorder = GETPOST('draftorder');
+            if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha') || isset($_POST['valid'])) // Both test are required to be compatible with all browsers
+            {
+                $draftorder = '';
+            }
+            $usevirtualstock = !empty($conf->global->STOCK_USE_VIRTUAL_STOCK);
+            if ($mode == 'physical') $usevirtualstock = 0;
+            if ($mode == 'virtual') $usevirtualstock = 1;
+            if($draftorder == 'on') $draftchecked = true;
+            $prod = new Product($db);
+            $prod->fetch($parameters['objp']->rowid);
+            $prod->load_stock('warehouseopen, warehouseinternal');
+            if ($usevirtualstock)
+            {
+                // If option to increase/decrease is not on an object validation, virtual stock may differs from physical stock.
+                $stock = $prod->stock_theorique;
+            }
+            else
+            {
+                $stock = $prod->stock_reel;
+            }
+            $draftordered = 0;
+            if (isset($draftchecked)) {
+                if(!empty($usevirtualstock)) $draftordered = TPackaging::loadQtySupplierOrder($parameters['objp']->rowid,'0');
+                $qtySupplier = TPackaging::loadQtySupplierOrder($parameters['objp']->rowid,'0,1,2,3,4');
+            }
+            else $qtySupplier = TPackaging::loadQtySupplierOrder($parameters['objp']->rowid,'1,2,3,4');
+            $qtyReception = TPackaging::loadQtyReception($parameters['objp']->rowid,'4');
+
+            $ordered = $qtySupplier - $qtyReception;
+
+            $desiredstock = ($parameters['objp']->desiredstockpse ? $parameters['objp']->desiredstockpse : $parameters['objp']->desiredstock);
+            $alertstock = ($parameters['objp']->seuil_stock_alertepse ? $parameters['objp']->seuil_stock_alertepse : $parameters['objp']->seuil_stock_alerte);
+
+            if(empty($usevirtualstock)) $stocktobuy = max(max($desiredstock, $alertstock) - $stock - $ordered, 0);
+            else $stocktobuy = max(max($desiredstock, $alertstock) - $stock - $draftordered, 0); //ordered is already in $stock in virtual mode
+            return '<td style="display:none;" class="packagingReload"><input type="hidden" class="packaging_ordered" value="'.$ordered.'"/><input type="hidden" class="packaging_stocktobuy" value="'.$stocktobuy.'"/></td>';
+        }
+
     }
+
+    public function printFieldListFooter($parameters, &$object, &$action, $hookmanager) {
+        ?>
+        <script type="text/javascript">
+            $(document).ready(function(){
+                $('.packagingReload').each(function(){
+                   let ordered = $(this).find('.packaging_ordered').val();
+                   let stocktobuy = $(this).find('.packaging_stocktobuy').val();
+                   let tr = $(this).closest('tr');
+                   $(tr).find('input[name^="tobuy"]').val(stocktobuy);
+                   $(tr).find('a[href^="replenishorders.php"]').html(ordered);
+                });
+            });
+        </script>
+        <?php
+    }
+
+
     public function beforePDFCreation($parameters, &$object, &$action, $hookmanager) {
 
         if (in_array('ordersuppliercard', explode(':', $parameters['context']))) {

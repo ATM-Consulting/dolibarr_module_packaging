@@ -87,7 +87,7 @@ class modpackaging extends DolibarrModules
         //							'workflow' => array('WORKFLOW_MODULE1_YOURACTIONTYPE_MODULE2'=>array('enabled'=>'! empty($conf->module1->enabled) && ! empty($conf->module2->enabled)', 'picto'=>'yourpicto@packaging')) // Set here all workflow context managed by module
         //                        );
         $this->module_parts = array('triggers' => 1,
-                                    'hooks' => array('ordersuppliercard', 'ordersupplierdispatch', 'productdao', 'stockproductcard'));
+                                    'hooks' => array('ordersuppliercard', 'ordersupplierdispatch', 'productdao', 'stockproductcard', 'stockreplenishlist'));
 
         // Data directories to create when module is enabled.
         // Example: this->dirs = array("/packaging/temp");
@@ -342,7 +342,7 @@ class modpackaging extends DolibarrModules
         $result = $this->_load_tables('/packaging/sql/');
         dol_include_once('/core/class/extrafields.class.php');
         $extrafields = new ExtraFields($this->db);
-        $res = $extrafields->addExtraField('packaging', 'Conditionnement', 'double', 0, '24,8', 'product_fournisseur_price',  0,  0,  '',  '',  0,  '', '1', $langs->trans('PackagingExtraTooltip'),  '',  '',  'packaging@packaging',  '1', 0);
+        $res = $extrafields->addExtraField('packaging', 'Packaging', 'double', 0, '24,2', 'product_fournisseur_price',  0,  0,  '',  '',  0,  '', '1', 'PackagingExtraTooltip',  '',  '',  'packaging@packaging',  '1', 0);
 //		setEventMessage('packagingNewRightsDefinedCheckUserRights', 'warnings');
 
         return $this->_init($sql, $options);
