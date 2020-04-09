@@ -8,54 +8,7 @@ packagingAbout = A propos du module packaging
 
 packaging=packaging
 AbricotNeedUpdate=Le module abricot doit être mis à jour
-LinkToThirparty=Lien vers le tiers
 
-# INIT
-packagingNewRightsDefinedCheckUserRights=Ce module utilise ces propres droits utilisateurs, si cela n'est pas déjà fait, vérifier les droits.
-
-# SETUP
-ParamLabel=Nom du paramètre
-ParamDesc=Une description si besoin
-ParamHelp=Le contenu de l'aide
-
-# MENU
-TopMenupackaging=packaging
-
-# STATUS
-packagingStatusCanceled=Abandonnée (fermée)
-packagingStatusDraft=Brouillon (à valider)
-packagingStatusValidated=Validée (à accepter)
-packagingStatusRefused=Refusée (fermée)
-packagingStatusAccepted=Acceptée (fermée)
-
-packagingStatusShortCanceled=Abandonnée
-packagingStatusShortDraft=Brouillon
-packagingStatusShortValidated=Validée
-packagingStatusShortRefused=Refusée
-packagingStatusShortAccepted=Acceptée
-
-# LIST
-packagingList=Liste packaging
-Nopackaging=(vide)
-
-# CARD
-Newpackaging=Création packaging
-packagingCard=Fiche packaging
-
-packagingModify=Modifier
-packagingClone=Cloner
-packagingValid=Valider
-packagingAccept=Accepter
-packagingRefuse=Refuser
-packagingReopen=Rouvrir
-packagingCancel=Abandonner
-packagingDelete=Supprimer
-
-ConfirmValidatepackagingTitle=Confirmation d'activation
-ConfirmValidatepackagingBody=Souhaitez-vous vraiment activer cette fiche packaging %s ?
-
-ConfirmDeletepackagingTitle=Confirmation de suppression
-ConfirmDeletepackagingBody=Souhaitez-vous vraiment supprimer cette fiche packaging %s ?
 Packaging = Conditionnement
 PackagingSupplierOrderTooltip = Conditionnement : %s <br> %s
 PackagingValueWillBeMultiplicated = La valeur saisie sera multipliée par le conditionnement
