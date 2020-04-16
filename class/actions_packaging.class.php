@@ -158,7 +158,7 @@ class Actionspackaging
             if($draftorder == 'on') $draftchecked = true;
             $prod = new Product($db);
             $prod->fetch($parameters['objp']->rowid);
-            $prod->load_stock('warehouseopen, warehouseinternal');
+            $prod->load_stock('warehouseopen, warehouseinternal', $draftchecked);
             if ($usevirtualstock)
             {
                 // If option to increase/decrease is not on an object validation, virtual stock may differs from physical stock.
@@ -170,7 +170,7 @@ class Actionspackaging
             }
             $draftordered = 0;
             if (isset($draftchecked)) {
-                if(!empty($usevirtualstock)) $draftordered = TPackaging::loadQtySupplierOrder($parameters['objp']->rowid,'0');
+//                if(!empty($usevirtualstock)) $draftordered = TPackaging::loadQtySupplierOrder($parameters['objp']->rowid,'0');
                 $qtySupplier = TPackaging::loadQtySupplierOrder($parameters['objp']->rowid,'0,1,2,3,4');
             }
             else $qtySupplier = TPackaging::loadQtySupplierOrder($parameters['objp']->rowid,'1,2,3,4');
@@ -182,7 +182,7 @@ class Actionspackaging
             $alertstock = ($parameters['objp']->seuil_stock_alertepse ? $parameters['objp']->seuil_stock_alertepse : $parameters['objp']->seuil_stock_alerte);
 
             if(empty($usevirtualstock)) $stocktobuy = max(max($desiredstock, $alertstock) - $stock - $ordered, 0);
-            else $stocktobuy = max(max($desiredstock, $alertstock) - $stock - $draftordered, 0); //ordered is already in $stock in virtual mode
+            else $stocktobuy = max(max($desiredstock, $alertstock) - $stock , 0); //ordered is already in $stock in virtual mode
             return '<td style="display:none;" class="packagingReload"><input type="hidden" class="packaging_ordered" value="'.$ordered.'"/><input type="hidden" class="packaging_stocktobuy" value="'.$stocktobuy.'"/></td>';
         }
 
@@ -234,22 +234,30 @@ class Actionspackaging
             dol_include_once('/fourn/class/fournisseur.commande.class.php');
             $stock_commande_fournisseur = 0;
             $stock_reception_fournisseur = 0;
+            $filterCFStatus = '1,2,3,4';
+            $filterReceptionStatus = '4';
+            if (isset($parameters['includedraftpoforvirtual'])){
+                $filterCFStatus = '0,'.$filterCFStatus;
+                $filterReceptionStatus = '0,'.$filterReceptionStatus;
+            }
 
             if (!empty($conf->fournisseur->enabled))
             {
-                $result = $object->load_stats_commande_fournisseur(0, '1,2,3,4', 1);
+
+                $result = $object->load_stats_commande_fournisseur(0, $filterCFStatus, 1);
                 if ($result < 0) dol_print_error($object->db, $object->error);
                 $stock_commande_fournisseur = $object->stats_commande_fournisseur['qty'];
             }
             if (!empty($conf->fournisseur->enabled) && empty($conf->reception->enabled))
             {
-                $result = $object->load_stats_reception(0, '4', 1);
+
+                $result = $object->load_stats_reception(0, $filterReceptionStatus, 1);
                 if ($result < 0) dol_print_error($object->db, $object->error);
                 $stock_reception_fournisseur = $object->stats_reception['qty'];
             }
             if (!empty($conf->fournisseur->enabled) && !empty($conf->reception->enabled))
             {
-                $result = $object->load_stats_reception(0, '4', 1);			// Use same tables than when module reception is not used.
+                $result = $object->load_stats_reception(0, $filterReceptionStatus, 1);			// Use same tables than when module reception is not used.
                 if ($result < 0) dol_print_error($object->db, $object->error);
                 $stock_reception_fournisseur = $object->stats_reception['qty'];
             }
@@ -257,8 +265,8 @@ class Actionspackaging
             $object->stock_theorique -= $this->_calcStockTheo($stock_commande_fournisseur, $stock_reception_fournisseur);
 
             //On récupère les bonnes stats avec les multiplications du conditionnement
-            $stock_commande_fournisseur = TPackaging::loadQtySupplierOrder($object->id, '1,2,3,4');
-            $stock_reception_fournisseur = TPackaging::loadQtyReception($object->id, '4');
+            $stock_commande_fournisseur = TPackaging::loadQtySupplierOrder($object->id, $filterCFStatus);
+            $stock_reception_fournisseur = TPackaging::loadQtyReception($object->id, $filterReceptionStatus);
 
             $object->stock_theorique += $this->_calcStockTheo($stock_commande_fournisseur, $stock_reception_fournisseur);
         }
